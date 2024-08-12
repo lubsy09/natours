@@ -1,10 +1,18 @@
 const Tour = require('./../models/tourModel');
 
+exports.aliasTopTours = (req, res, next) => {
+    req.query.limit = '5';
+    req.query.sort = '-ratingsAverage,price';
+    req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+    next();
+};
+
 exports.getAllTours = async (req, res) => {
+   try { 
+    console.log(req.query);
 
     //  BUILD QUERY
     //  1a) Filtering
-   try { 
         const queryObj = {...req.query};
         const excludedFields = ['page', 'sort', 'fields'];
         excludedFields.forEach(el => delete queryObj[el]);
@@ -31,6 +39,14 @@ exports.getAllTours = async (req, res) => {
     } else {
         query = query.select('-__v');
     }
+
+    // 4) Pagination
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+    
+    query = query.skip(skip).limit(limit);
+
     //     EXECUTE QUERY
         const tours = await query;
 
